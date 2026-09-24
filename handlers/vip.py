@@ -12,7 +12,7 @@ from states import VipPurchase
 
 router = Router()
 
-PAYMENT_CARD_INFO = "💳 8600 1234 5678 9012 (F. F. Familiya)"
+PAYMENT_CARD_INFO = "💳 8600 3329 7311 9468 (Sh. Majidov)"
 
 MENU_TEXTS = {
     "🔍 Kino qidirish", "🏆 TOP filmlar", "🎲 Tasodifiy kino", "🔖 Saqlanganlar", "🤖 AI tavsiya",
