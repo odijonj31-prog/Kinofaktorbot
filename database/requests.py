@@ -137,14 +137,24 @@ async def toggle_channel(channel_id: int, active: bool):
 
 async def add_movie(code: str, title: str, file_id: str, description: str | None = None,
                      genre: str | None = None, year: int | None = None,
-                     quality: str | None = None, is_vip_only: bool = False) -> Movie:
+                     quality: str | None = None, is_vip_only: bool = False,
+                     channel_message_id: int | None = None) -> Movie:
     async with async_session() as session:
         movie = Movie(code=code, title=title, file_id=file_id, description=description,
-                       genre=genre, year=year, quality=quality, is_vip_only=is_vip_only)
+                       genre=genre, year=year, quality=quality, is_vip_only=is_vip_only,
+                       channel_message_id=channel_message_id)
         session.add(movie)
         await session.commit()
         await session.refresh(movie)
         return movie
+
+
+async def set_movie_channel_message_id(movie_id: int, channel_message_id: int):
+    async with async_session() as session:
+        await session.execute(
+            update(Movie).where(Movie.id == movie_id).values(channel_message_id=channel_message_id)
+        )
+        await session.commit()
 
 
 async def get_movie_by_code(code: str) -> Movie | None:
