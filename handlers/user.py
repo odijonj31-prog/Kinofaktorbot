@@ -138,7 +138,7 @@ async def do_search(message: Message, bot: Bot, query: str):
         await message.answer("👑 Bu kino faqat VIP foydalanuvchilar uchun!")
         return
 
-    await send_movie(message, movie, message.from_user.id)
+    await send_movie(message, bot, movie, message.from_user.id)
 
 
 @router.message(SearchMovie.waiting_code)
@@ -148,7 +148,7 @@ async def process_movie_code(message: Message, bot: Bot, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith("select_movie:"))
-async def select_movie_cb(callback: CallbackQuery):
+async def select_movie_cb(callback: CallbackQuery, bot: Bot):
     movie_id = int(callback.data.split(":")[1])
     movie = await get_movie_by_id(movie_id)
     if not movie:
@@ -158,7 +158,7 @@ async def select_movie_cb(callback: CallbackQuery):
         await callback.answer("👑 Bu kino faqat VIP uchun!", show_alert=True)
         return
     await callback.answer()
-    await send_movie(callback.message, movie, callback.from_user.id)
+    await send_movie(callback.message, bot, movie, callback.from_user.id)
 
 
 @router.message(F.text == "🏆 TOP filmlar")
@@ -190,7 +190,7 @@ async def random_movie(message: Message, bot: Bot):
     if movie.is_vip_only and not await is_user_vip(message.from_user.id):
         await message.answer("👑 Tasodifiy tanlangan kino VIP uchun ekan. Yana urinib ko'ring yoki VIP oling!")
         return
-    await send_movie(message, movie, message.from_user.id)
+    await send_movie(message, bot, movie, message.from_user.id)
 
 
 @router.message(F.text == "🔖 Saqlanganlar")
@@ -240,8 +240,10 @@ async def show_help(message: Message):
     )
 
 
-@router.message(F.text.regexp(r"^[A-Za-z0-9_\-]{2,20}$"))
+@router.message(F.text)
 async def direct_code_search(message: Message, bot: Bot, state: FSMContext):
+    if message.text.startswith("/"):
+        return
     if await state.get_state() is not None:
         return
     await do_search(message, bot, message.text.strip())
