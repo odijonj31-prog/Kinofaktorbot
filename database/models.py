@@ -57,6 +57,7 @@ class Movie(Base):
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     file_id: Mapped[str] = mapped_column(String(255))
+    channel_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     quality: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_vip_only: Mapped[bool] = mapped_column(Boolean, default=False)
 
