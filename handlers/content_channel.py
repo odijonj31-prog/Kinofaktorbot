@@ -22,9 +22,8 @@ async def set_content_channel_start(message: Message, state: FSMContext):
     await message.answer(
         "📥 Botni kanalga <b>admin</b> qilib qo'shing, so'ng shu kanaldan istalgan "
         "xabarni shu yerga forward qiling.\n\n"
-        "Shundan keyin siz shu kanalga joylagan HAR BIR video, agar caption'i to'g'ri "
-        "formatda bo'lsa, avtomatik ravishda botga kino sifatida qo'shiladi.\n\n"
-        "Caption formati (video yuklaganda shunday yozing):\n<code>#1005 Kino nomi bu yerda</code>\n\n"
+        "Shundan keyin \"Kino qo'shish\" orqali yuklagan har bir video avtomatik "
+        "shu kanalga ham joylanadi va tomoshabinlarga aynan shu kanaldan yuboriladi.\n\n"
         f"{current_text}\n\n(Bekor qilish uchun /cancel)"
     )
 
@@ -42,8 +41,7 @@ async def set_content_channel_process(message: Message, bot: Bot, state: FSMCont
     await set_content_channel(chat_id=chat.id, title=chat.title)
     await message.answer(
         f"✅ Kontent kanal o'rnatildi: {chat.title}\n\n"
-        f"Endi shu kanalga <code>#kod Nomi</code> formatida video joylasangiz, "
-        f"avtomatik kino sifatida qo'shiladi.",
+        f"Endi \"Kino qo'shish\" orqali yuklagan videolar avtomatik shu kanalga ham tushadi.",
         reply_markup=admin_menu_kb(),
     )
 
@@ -57,7 +55,7 @@ async def set_content_channel_wrong(message: Message, state: FSMContext):
     await message.answer("❗️ Iltimos, kontent kanalidan biror xabarni forward qiling. (Bekor qilish uchun /cancel)")
 
 
-# ---------- AVTOMATIK KINO QO'SHISH: kanal postini kuzatish ----------
+# ---------- Kanalga to'g'ridan-to'g'ri video joylansa ham avtomatik qo'shish ----------
 
 @router.channel_post(F.video)
 async def auto_add_movie_from_channel(message: Message):
@@ -76,4 +74,7 @@ async def auto_add_movie_from_channel(message: Message):
     if existing:
         return
 
-    await add_movie(code=code, title=title, file_id=message.video.file_id)
+    await add_movie(
+        code=code, title=title, file_id=message.video.file_id,
+        channel_message_id=message.message_id,
+    )
