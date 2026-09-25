@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from database.requests import (
     get_or_create_user, get_movie_by_code, increment_views, add_favorite,
     remove_favorite, get_user_favorites, get_user, top_movies, is_user_vip,
-    search_movies_by_title, get_random_movie, get_movie_by_id,
+    search_movies_by_title, get_random_movie, get_movie_by_id, get_content_channel,
 )
 from filters.subscription import get_unsubscribed_channels
 from keyboards.user_kb import main_menu_kb, subscription_kb, movie_actions_kb, movie_search_results_kb
@@ -15,7 +15,7 @@ from states import SearchMovie
 router = Router()
 
 
-async def send_movie(message: Message, movie, user_id: int):
+async def send_movie(message: Message, bot: Bot, movie, user_id: int):
     favs = await get_user_favorites(user_id)
     is_fav = any(m.id == movie.id for m in favs)
     caption = f"🎬 <b>{movie.title}</b>\n"
@@ -29,11 +29,28 @@ async def send_movie(message: Message, movie, user_id: int):
         caption += f"\n{movie.description}\n"
     caption += f"\n👁 Ko'rishlar: {movie.views}"
 
-    await message.answer_video(
-        video=movie.file_id,
-        caption=caption,
-        reply_markup=movie_actions_kb(movie, is_fav),
-    )
+    content_ch = await get_content_channel()
+    sent_ok = False
+    if content_ch and movie.channel_message_id:
+        try:
+            await bot.copy_message(
+                chat_id=message.chat.id,
+                from_chat_id=content_ch.chat_id,
+                message_id=movie.channel_message_id,
+                caption=caption,
+                reply_markup=movie_actions_kb(movie, is_fav),
+            )
+            sent_ok = True
+        except Exception:
+            sent_ok = False
+
+    if not sent_ok:
+        await message.answer_video(
+            video=movie.file_id,
+            caption=caption,
+            reply_markup=movie_actions_kb(movie, is_fav),
+        )
+
     await increment_views(movie.id)
 
 
