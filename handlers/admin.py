@@ -13,6 +13,7 @@ from database.requests import (
     toggle_channel, count_users, count_vip_users, count_movies, get_all_user_ids,
     get_vip_request, update_vip_request_status, grant_vip, get_user,
     create_vip_plan, get_active_vip_plans, get_pending_vip_requests, get_movie_by_code,
+    get_content_channel, set_movie_channel_message_id,
 )
 
 router = Router()
@@ -102,7 +103,7 @@ async def add_movie_desc(message: Message, state: FSMContext):
 
 
 @router.message(AddMovie.waiting_vip_only)
-async def add_movie_vip_only(message: Message, state: FSMContext):
+async def add_movie_vip_only(message: Message, state: FSMContext, bot: Bot):
     is_vip = message.text.strip().lower() in ("ha", "ha.", "yes", "+")
     data = await state.get_data()
     await state.clear()
@@ -111,9 +112,26 @@ async def add_movie_vip_only(message: Message, state: FSMContext):
         code=data["code"], title=data["title"], file_id=data["file_id"],
         description=data.get("description"), is_vip_only=is_vip,
     )
+
+    channel_status = "\n💡 Kontent kanal sozlanmagan — kino faqat bazada saqlandi."
+    content_ch = await get_content_channel()
+    if content_ch:
+        try:
+            sent = await bot.send_video(
+                chat_id=content_ch.chat_id,
+                video=movie.file_id,
+                caption=f"#{movie.code} {movie.title}",
+            )
+            await set_movie_channel_message_id(movie.id, sent.message_id)
+            channel_status = f"\n📥 Kontent kanalga joylandi: {content_ch.title}\n" \
+                              f"Tomoshabinlarga endi shu kanaldan yuboriladi."
+        except Exception:
+            channel_status = "\n⚠️ Kontent kanalga joylab bo'lmadi (bot u yerda admin emasmi tekshiring)."
+
     await message.answer(
         f"✅ Kino qo'shildi!\n\n🎬 {movie.title}\n🔢 Kod: <code>{movie.code}</code>\n"
-        f"👑 VIP only: {'Ha' if is_vip else 'Yoq'}",
+        f"👑 VIP only: {'Ha' if is_vip else 'Yoq'}"
+        f"{channel_status}",
         reply_markup=admin_menu_kb(),
     )
 
