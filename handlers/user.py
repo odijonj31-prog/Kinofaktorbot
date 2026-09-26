@@ -15,8 +15,9 @@ from states import SearchMovie
 router = Router()
 
 
-async def send_movie(message: Message, bot: Bot, movie, user_id: int):
-    favs = await get_user_favorites(user_id)
+async def send_movie(message: Message, bot: Bot, movie, telegram_id: int):
+    db_user = await get_user(telegram_id)
+    favs = await get_user_favorites(db_user.id) if db_user else []
     is_fav = any(m.id == movie.id for m in favs)
     caption = f"🎬 <b>{movie.title}</b>\n"
     if movie.year:
